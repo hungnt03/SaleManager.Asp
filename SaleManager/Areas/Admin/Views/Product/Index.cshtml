@@ -1,0 +1,67 @@
+﻿@model SaleManager.Models.Product
+
+@{
+	ViewData["Title"] = "Danh sách sản phẩm";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="btn-group mb-4" role="group" aria-label="Button group with nested dropdown">
+  <a asp-action="Create" type="button" class="btn btn-outline-success">Tạo mới</a>
+  <a asp-action="ExportTemplate" type="button" class="btn btn-outline-success">Lấy mẫu</a>
+  <a type="button" class="btn btn-outline-success btn-import">Nhập hàng</a>
+</div>
+
+<form asp-action="Import" class="visually-hidden">
+	<input class="form-control" type="file" id="csv" name = "csv">
+</form>
+
+
+<table id="example" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
+    <thead>
+        <tr>
+            <th>Tên hàng hoá</th>
+            <th>Giá bán</th>
+            <th>Số lượng</th>
+            <th>Đơn vị</th>
+			<th>Hạn sử dụng</th>
+            <th>Disable</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+@*@{
+
+	Func<int?, string> generateUrl = (int? _pagenumber) =>
+			{
+				return Url.ActionLink("Index", null, new { page = _pagenumber , searchString = searchString, categoryId = categoryId, supplierId = supplierId});
+			};
+
+	var datapaging = new
+	{
+		currentPage = ViewBag.pageNumber,
+		countPages = ViewBag.totalPages,
+		generateUrl = generateUrl
+	};
+
+}
+<partial name="_Paging" model="@datapaging" />*@
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Thông báo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
