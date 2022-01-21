@@ -86,11 +86,11 @@
             $('div#payModal').modal('show');
             return;
         }
-        PayAjax(TableToJson(), $('input.payment').val(), $('div#payModal textarea.note').val());
+        PayAjax(TableToJson(), $('input.payment').val(), $('div#payModal textarea.note').val(), $('select.customer').val());
     });
 
     $('button.btn-pay-with-note').click(function () {
-        PayAjax(TableToJson(), $('input.payment').val(), $('div#payModal textarea.note').val());
+        PayAjax(TableToJson(), $('input.payment').val(), $('div#payModal textarea.note').val(), $('select.customer').val());
         $('div#payModal').modal('hide');
     });
 
@@ -149,7 +149,7 @@
         });
     }
 
-    function PayAjax(orders, payment, note) {
+    function PayAjax(orders, payment, note, customer) {
         event.preventDefault();
         var formData = new FormData();
         for (var i = 0; i < orders.length; i++) {
@@ -158,6 +158,7 @@
         }
         formData.append('payment', payment);
         formData.append('note', note);
+        formData.append('customerId', customer);
 
         $.ajax({
             contentType: 'application/json; charset=utf-8',

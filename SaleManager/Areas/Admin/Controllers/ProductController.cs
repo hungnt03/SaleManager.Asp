@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using SaleManager.Data;
 using SaleManager.Models;
 using SaleManager.Models.Products;
+using SaleManager.Utils;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -150,12 +151,57 @@ namespace SaleManager.Areas.Admin.Controllers
             var exitsDatas = _context.Products.Where(x => barcodes.Contains(x.Barcode)).ToList();
             if (exitsDatas.Count > 0) return Conflict(exitsDatas.ToArray());
             var products = new List<Product>();
+            var amount = 0;            
             foreach (var import in datas)
             {
                 products.Add(new Product(import));
+                amount += import.Price * import.Quantity;
             }
-            _context.Products.AddRange(products);
-            await _context.SaveChangesAsync();
+
+            using var tran = _context.Database.BeginTransaction();
+            try
+            {
+                _context.Products.AddRange(products);
+                var transaction = new Transaction()
+                {
+                    Ammount = amount,
+                    BillNumber = _context.Transactions.Max(x => x.Id).ToString("000000000"),
+                    CreatedAt = System.DateTime.Now,
+                    CreatedBy = "Administrator",
+                    Note = String.Empty,
+                    PayBack = 0 - amount,
+                    Payment = 0,
+                    //1: da thanh toan, 2:chua thanh toan, 3:thanh toan 1 phan
+                    Status = TransStatus.UNPAID,
+                    //1: nhập hàng, 2: bán hàng
+                    Type = TransType.IMPORT,
+                };
+                _context.Transactions.Add(transaction);
+                _context.SaveChanges();
+
+                var transactionDetails = new List<TransactionDetail>();
+                products.ForEach(x =>
+                {
+                    transactionDetails.Add(new TransactionDetail()
+                    {
+                        CreatedAt = System.DateTime.Now,
+                        CreatedBy = "Administrator",
+                        ProductId = x.Id,
+                        Quantity = x.Quantity,
+                        TransactionId = transaction.Id,
+                    });
+                });
+                await _context.transactionDetails.AddRangeAsync(transactionDetails);
+
+                await _context.SaveChangesAsync();
+                tran.Commit();
+            }
+            catch (Exception ex)
+            {
+                tran.Rollback();
+                return BadRequest(ex.Message);
+            }
+            
 
             return Ok();
         }

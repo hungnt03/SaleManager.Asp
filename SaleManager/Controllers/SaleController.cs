@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SaleManager.Data;
 using SaleManager.Models;
 using SaleManager.Models.Products;
+using SaleManager.Utils;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -59,7 +60,7 @@ namespace SaleManager.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Pay(List<Order> orders, int payment, string note)
+        public async Task<IActionResult> Pay(List<Order> orders, int payment, string note, int customerId)
         {
             using var tran = _context.Database.BeginTransaction();
             try
@@ -87,9 +88,10 @@ namespace SaleManager.Controllers
                     PayBack = payment - amount,
                     Payment = payment,
                     //1: da thanh toan, 2:chua thanh toan, 3:thanh toan 1 phan
-                    Status = (payment >= amount) ? 1 : (payment != 0) ? 3 : 2,
+                    Status = (payment >= amount) ? TransStatus.PAID : (payment != 0) ? TransStatus.PARTIAL_PAYMENT : TransStatus.UNPAID,
                     //1: nhập hàng, 2: bán hàng
-                    Type = 2,
+                    Type = TransType.SELL,
+                    CustomerId = customerId,
                 };
                 _context.Transactions.Add(transaction);
                 _context.SaveChanges();
