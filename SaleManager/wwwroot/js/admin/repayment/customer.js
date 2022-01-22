@@ -12,11 +12,33 @@
     $('tr.hand').click(function () {
         alert('click');
         var id = $(this).find('span.customer-id');
-        $('div#detailModal').modal('show');
-        getData(this);
+        GetDetaillsByDate(id);
     });
 
     // Ajax
+    function GetDetaillsByDate(id) {
+        event.preventDefault();
+        var formData = new FormData();
+        formData.append('id', id);
+        $.ajax({
+            type: "POST",
+            url: "/admin/repayment/apiCustomerDetails",
+            data: formData,
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (result) {
+
+                $('div#detailModal').modal('show');
+            },
+            failure: function (response) {
+                console.log(response);
+            },
+            error: function (response) {
+                console.log(response);
+            }
+        });
+    }
+
     function getData(self) {
         event.preventDefault();
         var formData = new FormData();

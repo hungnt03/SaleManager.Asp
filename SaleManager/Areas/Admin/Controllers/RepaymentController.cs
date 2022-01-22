@@ -50,44 +50,20 @@ namespace SaleManager.Areas.Admin.Controllers
         }
 
         [HttpPost]
-        public IActionResult ApiCustomerDetails(int? id)
+        public async Task<IActionResult> ApiCustomerDetails(int? id)
         {
             if (id == null) return NotFound();
-            
 
-            var tranSupplier = _context.Transactions.Where(x => x.Type == TransType.IMPORT && x.Status != TransStatus.PAID)
-                .GroupBy(x => x.SupplierId)
-                .Select(x => new
+            var transactions = await _context.Transactions.Where(x => x.Type == TransType.SELL && x.Status != TransStatus.PAID && x.CustomerId == id)
+                .GroupBy(x => x.CreatedAt.Value.ToShortDateString())
+                .Select(x => new TransactionCustomerDetail
                 {
-                    SupplierId = x.Key,
-                    Total = x.Sum(s => s.PayBack)
-                }).AsEnumerable();
-            var suppliers = tranSupplier
-                .Join(_context.Supplier, t => t.SupplierId, s => s.Id, (trans, supp) => new
-                {
-                    SupplierId = supp.Id,
-                    SupplierName = supp.Name,
-                    EmployeeName = supp.EmployeeName,
-                    Telephone = supp.Telephone,
-                    Total = trans.Total * (-1),
-                }).ToList();
-
-
-            var tranCustomer = _context.Transactions.Where(x => x.Type == TransType.SELL && x.Status != TransStatus.PAID)
-                .GroupBy(x => x.CustomerId)
-                .Select(x => new
-                {
-                    CustomerId = x.Key,
-                    Total = x.Sum(s => s.PayBack)
-                }).AsEnumerable();
-            var customers = tranCustomer.Join(_context.Customer, t => t.CustomerId, c => c.Id, (trans, cus) => new
-            {
-                CustomerId = cus.Id,
-                CustomerName = cus.Name,
-                Telephone = cus.Telephone,
-                Total = trans.Total * (-1),
-            }).ToList();
-            return Json(new { suppliers = suppliers, customers = customers });
+                    CreatedAt = x.Key,
+                    Ammount = x.Sum(s=>s.Ammount),
+                    Payment = x.Sum(s=>s.Payment),
+                    PayBack = x.Sum(s => s.PayBack)
+                }).ToArrayAsync();
+            return Json(new {data = transactions });
         }
 
         [HttpPost]
