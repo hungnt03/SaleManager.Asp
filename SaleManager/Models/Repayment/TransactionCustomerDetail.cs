@@ -9,10 +9,12 @@ namespace SaleManager.Models.Repayment
         public String CreatedAt { set; get; }
         [Display(Name = "Tên sản phẩm")]
         public String ProductName { set; get; }
+        [Display(Name = "Giá")]
+        public int Price { set; get; }
         [Display(Name = "Số lượng")]
         public int Quantity { set; get; }
         [Display(Name = "Thành tiền")]
-        public Decimal Total { set; get; }
+        public int Total { set; get; }
 
         [Display(Name = "Tổng")]
         public int Ammount { set; get; }
@@ -20,6 +22,5 @@ namespace SaleManager.Models.Repayment
         public int Payment { set; get; }
         [Display(Name = "Tiền thối")]
         public int PayBack { set; get; }
-
     }
 }

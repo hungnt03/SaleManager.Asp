@@ -45,6 +45,7 @@
     <Folder Include="Areas\Identity\Models\" />
     <Folder Include="Areas\Identity\Views\" />
     <Folder Include="wwwroot\image\product\" />
+    <Folder Include="wwwroot\image\transaction\temp\" />
     <Folder Include="wwwroot\template\" />
   </ItemGroup>
 

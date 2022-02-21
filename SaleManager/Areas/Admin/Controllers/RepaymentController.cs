@@ -25,7 +25,7 @@ namespace SaleManager.Areas.Admin.Controllers
         // GET: Admin/Repayment
         public IActionResult Index()
         {
-            return View();
+            return Redirect("~/admin/repayment/customer");
         }
 
         public IActionResult Customer()
@@ -40,13 +40,36 @@ namespace SaleManager.Areas.Admin.Controllers
                 }).AsEnumerable();
             var customers = tranCustomer
                 .Join(_context.Customer, t => t.CustomerId, c => c.Id, (trans, cus) => new TransactionCustomer
-            {
-                CustomerId = cus.Id,
-                CustomerName = cus.Name,
-                Telephone = cus.Telephone,
-                Total = trans.Total * (-1),
-            }).OrderBy(x => x.CustomerName).ToList();
+                {
+                    CustomerId = cus.Id,
+                    CustomerName = cus.Name,
+                    Telephone = cus.Telephone,
+                    Total = trans.Total * (-1),
+                }).OrderBy(x => x.CustomerName).ToList();
             return View(customers);
+        }
+
+        public async Task<IActionResult> CustomerDetail(string date, int customer)
+        {
+            var buyedDate = Convert.ToDateTime(date);
+            var dbFunc = Microsoft.EntityFrameworkCore.EF.Functions;
+            var transactions = await _context.Transactions
+                .Where(x => x.CustomerId == customer && buyedDate.Date.Equals(x.CreatedAt.Value.Date))
+                .Select(x => x.Id).ToListAsync();
+            var details = await _context.transactionDetails
+                .Include(x => x.Product)
+                .Where(x => transactions.Contains(x.TransactionId))
+                .Select(x=> new TransactionCustomerDetail()
+                {
+                    CreatedAt = x.CreatedAt.Value.ToShortDateString(),
+                    ProductName = x.Product.Name,
+                    Price = x.Product.Price,
+                    Quantity = x.Quantity,
+                    Total = x.Product.Price * x.Quantity
+                })
+                .ToListAsync();
+
+            return View(details);
         }
 
         [HttpPost]
@@ -54,17 +77,94 @@ namespace SaleManager.Areas.Admin.Controllers
         {
             if (id == null) return NotFound();
 
-            var transactions = await _context.Transactions.Where(x => x.Type == TransType.SELL && x.Status != TransStatus.PAID && x.CustomerId == id)
-                .GroupBy(x => x.CreatedAt.Value.ToShortDateString())
+            var sql = await _context.Transactions.Where(x => x.Type == TransType.SELL && x.Status != TransStatus.PAID && x.CustomerId == id)
+                //.GroupBy(x => x.CreatedAt.Value.ToShortDateString())
                 .Select(x => new TransactionCustomerDetail
                 {
-                    CreatedAt = x.Key,
-                    Ammount = x.Sum(s=>s.Ammount),
-                    Payment = x.Sum(s=>s.Payment),
-                    PayBack = x.Sum(s => s.PayBack)
-                }).ToArrayAsync();
-            return Json(new {data = transactions });
+                    CreatedAt = x.CreatedAt.Value.ToShortDateString(),
+                    Ammount = x.Ammount,
+                    Payment = x.Payment,
+                    PayBack = x.PayBack
+                })
+                .ToListAsync();
+            var transactions = sql.GroupBy(x => x.CreatedAt).Select(x => new TransactionCustomerDetail()
+            {
+                CreatedAt = x.Key,
+                Ammount = x.Sum(s => s.Ammount),
+                Payment = x.Sum(s => s.Payment),
+                PayBack = x.Sum(s => s.PayBack)
+            }).ToArray();
+            return Json(new { data = transactions });
         }
+
+        public async Task ApiCustomerPay(int id, List<string> dates)
+        {
+            var dateRanges = new List<DateTime>();
+            foreach(var elm in dates)
+            {
+                dateRanges.Add(Convert.ToDateTime(elm).Date);
+            }
+            var trans = await _context.Transactions
+                .Where(x => x.CustomerId == id && dateRanges.Contains(x.CreatedAt.Value.Date)).ToListAsync();
+            foreach(var elm in trans)
+            {
+                elm.Status = TransStatus.PAID;
+                elm.UpdatedAt = DateTime.Now;
+                elm.UpdatedBy = "Administrator";
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        public IActionResult Supplier()
+        {
+            var tranSupplier = _context.Transactions
+                .Where(x => x.Type == TransType.IMPORT && x.Status != TransStatus.PAID)
+                .GroupBy(x => x.CustomerId)
+                .Select(x => new
+                {
+                    SupplierId = x.Key,
+                    Total = x.Sum(s => s.PayBack)
+                }).AsEnumerable();
+            var customers = tranSupplier
+                .Join(_context.Supplier, t => t.SupplierId, c => c.Id, (trans, supplier) => new TransactionSupplier
+                {
+                    SupplierId = supplier.Id,
+                    SupplierName = supplier.Name,
+                    EmployeeName = supplier.EmployeeName,
+                    Telephone = supplier.Telephone,
+                    Total = trans.Total * (-1),
+                }).OrderBy(x => x.EmployeeName).ToList();
+            return View(customers);
+        }
+
+        public async Task<IActionResult> SupplierDetail(string date, int supplier)
+        {
+            var buyedDate = Convert.ToDateTime(date);
+            var dbFunc = Microsoft.EntityFrameworkCore.EF.Functions;
+            var transactions = await _context.Transactions.Where(x => x.SupplierId == supplier &&
+                buyedDate.Date.Equals(x.CreatedAt.Value.Date)).Select(x => x.Id).ToListAsync();
+            var details = await _context.transactionDetails
+                .Include(x => x.Product)
+                .Where(x => transactions.Contains(x.TransactionId))
+                .Select(x => new TransactionCustomerDetail()
+                {
+                    CreatedAt = x.CreatedAt.Value.ToShortDateString(),
+                    ProductName = x.Product.Name,
+                    Price = x.Product.Price,
+                    Quantity = x.Quantity,
+                    Total = x.Product.Price * x.Quantity
+                })
+                .ToListAsync();
+
+            return View(details);
+        }
+
+
+
+
+
+
+
 
         [HttpPost]
         public IActionResult ListData()
@@ -83,7 +183,7 @@ namespace SaleManager.Areas.Admin.Controllers
                     SupplierName = supp.Name,
                     EmployeeName = supp.EmployeeName,
                     Telephone = supp.Telephone,
-                    Total = trans.Total*(-1),
+                    Total = trans.Total * (-1),
                 }).ToList();
 
 
@@ -99,161 +199,10 @@ namespace SaleManager.Areas.Admin.Controllers
                 CustomerId = cus.Id,
                 CustomerName = cus.Name,
                 Telephone = cus.Telephone,
-                Total = trans.Total*(-1),
+                Total = trans.Total * (-1),
             }).ToList();
             return Json(new { suppliers = suppliers, customers = customers });
         }
 
-        // GET: Admin/Repayment/Details/5
-        public async Task<IActionResult> CustomerDetails(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var transactions = await _context.Transactions
-                .Where(x => x.CustomerId == id && x.Type == TransType.SELL && x.Status != TransStatus.PAID)
-                .GroupJoin(_context.transactionDetails.Include(x => x.Product), t => t.Id, d => d.TransactionId, (t, d) => new { t, d })
-                .SelectMany(x => x.d.DefaultIfEmpty(), (x, d) => new TransactionCustomerDetail
-                {
-                    CreatedAt = x.t.CreatedAt.Value,
-                    ProductName = d.Product.Name,
-                    Quantity = d.Quantity,
-                    Total = d.Quantity * d.Product.Price
-                })
-                .ToListAsync();
-            if (transactions == null)
-            {
-                return NotFound();
-            }
-
-            return View(transactions);
-        }
-
-        // GET: Admin/Repayment/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var transaction = await _context.Transactions
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (transaction == null)
-            {
-                return NotFound();
-            }
-
-            return View(transaction);
-        }
-
-        // GET: Admin/Repayment/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Admin/Repayment/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
-        // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Type,CustomerId,SupplierId,Status,Ammount,Payment,PayBack,BillNumber,Note,CreatedBy,UpdatedBy,CreatedAt,UpdatedAt")] Transaction transaction)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(transaction);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(transaction);
-        }
-
-        // GET: Admin/Repayment/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var transaction = await _context.Transactions.FindAsync(id);
-            if (transaction == null)
-            {
-                return NotFound();
-            }
-            return View(transaction);
-        }
-
-        // POST: Admin/Repayment/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
-        // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Type,CustomerId,SupplierId,Status,Ammount,Payment,PayBack,BillNumber,Note,CreatedBy,UpdatedBy,CreatedAt,UpdatedAt")] Transaction transaction)
-        {
-            if (id != transaction.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(transaction);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!TransactionExists(transaction.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(transaction);
-        }
-
-        // GET: Admin/Repayment/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var transaction = await _context.Transactions
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (transaction == null)
-            {
-                return NotFound();
-            }
-
-            return View(transaction);
-        }
-
-        // POST: Admin/Repayment/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var transaction = await _context.Transactions.FindAsync(id);
-            _context.Transactions.Remove(transaction);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool TransactionExists(int id)
-        {
-            return _context.Transactions.Any(e => e.Id == id);
-        }
     }
 }

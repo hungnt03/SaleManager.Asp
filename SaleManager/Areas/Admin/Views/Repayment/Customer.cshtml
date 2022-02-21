@@ -4,12 +4,14 @@
     ViewData["Title"] = "Danh sách khách nợ";
 }
 
+<link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.19.1/dist/bootstrap-table.min.css">
+
 <table class="table" id="myTable">
     <thead>
         <tr>
             <th scope="col">
                 @Html.DisplayNameFor(model => model.CustomerName)
-            </th> 
+            </th>
             <th scope="col">
                 @Html.DisplayNameFor(model => model.Telephone)
             </th>
@@ -19,51 +21,50 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr class="hand">
-            <td>
-                @Html.DisplayFor(modelItem => item.CustomerName)
-                <span class="customer-id d-none">@Html.DisplayFor(modelItem => item.CustomerId)</span>
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Telephone)
-            </td>
-            <td class="total">
-                @Html.DisplayFor(modelItem => item.Total)
-            </td>
-        </tr>
-}
+        @foreach (var item in Model)
+        {
+            <tr class="hand">
+                <td>
+                    @Html.DisplayFor(modelItem => item.CustomerName)
+                    <span class="customer-id d-none">@Html.DisplayFor(modelItem => item.CustomerId)</span>
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Telephone)
+                </td>
+                <td class="total">
+                    @Html.DisplayFor(modelItem => item.Total)
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
 
 <!-- Transaction customer detail modal -->
 <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="detailModalLabel">Chi tiết theo ngày</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <table class="table" id="detail">
-				<thead>
-					<tr>
-						<th scope="col">#</th>
-						<th scope="col">Tên khách hàng</th>
-						<th scope="col">Số điện thoại</th>
-						<th scope="col">Tổng nợ</th>
-					</tr>
-				</thead>
-				<tbody></tbody>
-			</table>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-        <button type="button" class="btn btn-primary">Thanh toán</button>
-      </div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailModalLabel">Chi tiết theo ngày</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table w-100" id="detail">
+                    <thead>
+                        <tr>
+                            <th scope="col"><input class="form-check-input detail-check-all" type="checkbox"></th>
+                            <th scope="col">Ngày mua hàng</th>
+                            <th scope="col">Thành tiền</th>
+                            <th scope="col">Đã trả</th>
+                            <th scope="col">Còn lại</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary btn-pay">Thanh toán</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
-<script type="text/javascript">
-
-</script>

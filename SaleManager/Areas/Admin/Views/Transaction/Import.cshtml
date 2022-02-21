@@ -1,0 +1,43 @@
+﻿@{
+    ViewData["Title"] = "Nhập hàng";
+}
+
+<div class="main-input show">
+    <div class="d-flex flex-column w-100 mt-4">
+        <button type="button" class="btn btn-outline-secondary btn-lg btn-import-csv col-12 col-sm-6 col-md-4 mx-auto">Chọn hoá đơn (csv)</button>
+        <button type="button" class="btn btn-outline-secondary btn-lg btn-import-img mt-3 col-12 col-sm-6 col-md-4 mx-auto">Chọn hoá đơn (img)</button>
+        <button type="button" class="btn btn-warning btn-lg btn-next mt-5 mx-auto rounded-circle circle-button-size hidden">></button>
+    </div>
+</div>
+
+<form asp-action="Import" class="visually-hidden">
+    <input class="form-control file" type="file" id="csv" name="csv" accept=".csv, text/csv">
+    <input class="form-control file" type="file" id="img" name="img" accept="image/*">
+</form>
+
+<div class="main-confirm hidden">
+    <p class="text-center fw-bold font-monospace fs-3 mb-2">Xác nhận lại nội dung hoá đơn giữa 2 bản và tiến hành lưu trữ.</p>
+    <div class="row">
+        <div class="col-sm-12 col-md-6">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Tên hàng hoá</th>
+                        <th scope="col">Số lượng</th>
+                        <th scope="col">Giá nhập</th>
+                        <th scope="col">Giá bán</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-sm-12 col-md-6">
+            <img src="" class="img-fluid rounded image">
+        </div>
+        <div class="col-12 d-flex justify-content-center mt-5">
+            <button type="button" class="btn btn-warning btn-lg btn-register rounded-circle circle-button-size">✔</button>
+        </div>
+    </div>
+</div>

@@ -8,3 +8,4 @@ function alert(message, type) {
 
     document.getElementById('liveAlert').append(wrapper)
 }
+

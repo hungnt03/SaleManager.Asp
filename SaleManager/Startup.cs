@@ -55,7 +55,7 @@ namespace SaleManager
                 endpoints.MapAreaControllerRoute(
                     name: "MyArea",
                     areaName: "Admin",
-                    pattern: "{area:exists}/{controller=Product}/{action=Index}/{id?}");
+                    pattern: "{area:exists}/{controller=Sale}/{action=Index}/{id?}");
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");

@@ -1,0 +1,73 @@
+﻿@model IEnumerable<SaleManager.Models.Repayment.TransactionSupplier>
+
+@{
+    ViewData["Title"] = "Danh sách nhập hàng chưa thanh toán";
+}
+
+
+<table class="table" id="myTable">
+    <thead>
+        <tr>
+            <th scope="col">
+                @Html.DisplayNameFor(model => model.SupplierName)
+            </th> 
+            <th scope="col">
+                @Html.DisplayNameFor(model => model.EmployeeName)
+            </th> 
+            <th scope="col">
+                @Html.DisplayNameFor(model => model.Telephone)
+            </th>
+            <th scope="col">
+                @Html.DisplayNameFor(model => model.Total)
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr class="hand">
+            <td>
+                @Html.DisplayFor(modelItem => item.SupplierName)
+                <span class="supplier-id d-none">@Html.DisplayFor(modelItem => item.SupplierId)</span>
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.EmployeeName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Telephone)
+            </td>
+            <td class="total">
+                @Html.DisplayFor(modelItem => item.Total)
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+
+<!-- Transaction customer detail modal -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="detailModalLabel">Chi tiết theo ngày</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table w-100" id="detail">
+				<thead>
+					<tr>
+						<th  scope="col">Ngày nhập hàng</th>
+						<th  scope="col">Thành tiền</th>
+						<th  scope="col">Đã trả</th>
+                        <th  scope="col">Còn lại</th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+        <button type="button" class="btn btn-primary">Thanh toán</button>
+      </div>
+    </div>
+  </div>
+</div>
