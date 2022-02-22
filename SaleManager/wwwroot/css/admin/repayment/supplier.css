@@ -1,0 +1,7 @@
+﻿tr.hand {
+    cursor: pointer;
+}
+
+tr.hand:hover {
+    background-color: #d1d1d1;
+}

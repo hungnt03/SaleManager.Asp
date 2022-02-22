@@ -3,10 +3,6 @@
     var table = $('#myTable').DataTable();
 
     var price = '';
-    $('td.total').each(function () {
-        price = $(this).text().replace('.00', '')
-        $(this).empty().append(parseInt(price).toLocaleString());
-    });
 
     // Event
     var customerId = '';
@@ -33,7 +29,7 @@
     $('button.btn-pay').click(function () {
         let checked = $('input.detail-check:checked');
         if (checked.length == 0) {
-            alert("Hãy chọn ngày muốn thu hồi nợ!");
+            alert('Hãy chọn ngày muốn thu hồi nợ !.','warning');
             return;
         }
 
@@ -42,8 +38,23 @@
             arrDate.push($(elm).parent().parent().find('a').eq(0).text().replace('/', '-').replace('/', '-'));
         });
 
-        $.post("/admin/repayment/apiCustomerPay", { 'id': customerId, 'dates': arrDate }, function (data, status) {
-            var x = 1;
+        var formData = new FormData();
+        formData.append('id', customerId);
+        formData.append('dates', arrDate);
+        $.ajax({
+            url: '/admin/repayment/apiCustomerPay',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (result) {
+                alert('Giao dịch thành công !.', 'success');
+                $('div#detailModal').modal('hide');
+                setTimeout(window.location.reload(), 7000);
+            },
+            error: function (error) {
+                alert(error, 'danger');
+            }
         });
     });
 

@@ -16,10 +16,13 @@
 });
 
 // Write your JavaScript code.
-function alert(message, type) {
+function alert(messages, type) {
     var wrapper = document.createElement('div')
     wrapper.className = "bounceIn";
-    wrapper.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible" role="alert">' + message + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>'
+    if (Array.isArray(messages))
+        wrapper.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible" role="alert">' + messages.join('</br>') + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
+    else
+        wrapper.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible" role="alert">' + messages + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
 
     document.getElementById('liveAlert').append(wrapper)
 }

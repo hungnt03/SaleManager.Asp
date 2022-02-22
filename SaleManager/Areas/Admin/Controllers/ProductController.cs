@@ -155,7 +155,7 @@ namespace SaleManager.Areas.Admin.Controllers
             foreach (var import in datas)
             {
                 products.Add(new Product(import));
-                amount += import.Price * import.Quantity;
+                amount += import.Price.Value * import.Quantity;
             }
 
             using var tran = _context.Database.BeginTransaction();

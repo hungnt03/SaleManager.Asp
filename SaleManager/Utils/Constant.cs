@@ -14,4 +14,11 @@
         public const int IMPORT = 1;
         public const int SELL = 2;
     }
+
+    public static class ErrMess
+    {
+        public static string Required = "{0} không được để trống.";
+        public static string NotExits = "Không tìm thấy dữ liệu phù hợp.";
+        public static string Annonymus = "Có lỗi xảy ra, vui lòng thử lại !.";
+    }
 }

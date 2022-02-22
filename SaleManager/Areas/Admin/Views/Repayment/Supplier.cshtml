@@ -5,9 +5,9 @@
 }
 
 
-<table class="table" id="myTable">
+<table class="table table-striped" id="myTable">
     <thead>
-        <tr>
+        <tr>            
             <th scope="col">
                 @Html.DisplayNameFor(model => model.SupplierName)
             </th> 
@@ -24,7 +24,7 @@
     </thead>
     <tbody>
 @foreach (var item in Model) {
-        <tr class="hand">
+        <tr class="hand">            
             <td>
                 @Html.DisplayFor(modelItem => item.SupplierName)
                 <span class="supplier-id d-none">@Html.DisplayFor(modelItem => item.SupplierId)</span>
@@ -35,7 +35,7 @@
             <td>
                 @Html.DisplayFor(modelItem => item.Telephone)
             </td>
-            <td class="total">
+            <td class="currency">
                 @Html.DisplayFor(modelItem => item.Total)
             </td>
         </tr>
@@ -43,7 +43,7 @@
     </tbody>
 </table>
 
-<!-- Transaction customer detail modal -->
+<!-- Transaction supplier detail modal -->
 <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -55,6 +55,7 @@
         <table class="table w-100" id="detail">
 				<thead>
 					<tr>
+                        <th scope="col"><input class="form-check-input detail-check-all" type="checkbox"></th>
 						<th  scope="col">Ngày nhập hàng</th>
 						<th  scope="col">Thành tiền</th>
 						<th  scope="col">Đã trả</th>
@@ -66,7 +67,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-        <button type="button" class="btn btn-primary">Thanh toán</button>
+        <button type="button" class="btn btn-primary btn-pay">Thanh toán</button>
       </div>
     </div>
   </div>

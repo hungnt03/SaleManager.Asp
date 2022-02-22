@@ -9,7 +9,9 @@ using CsvHelper;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using SaleManager.Controllers;
 using SaleManager.Data;
 using SaleManager.Models;
 using SaleManager.Models.Products;
@@ -18,38 +20,60 @@ using SaleManager.Utils;
 namespace SaleManager.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    public class TransactionController : Controller
+    public class TransactionController : AbstractController
     {
-        private readonly AppDbContext _context;
-        private readonly IWebHostEnvironment _hostingEnvironment;
-
-        public TransactionController(AppDbContext context, IWebHostEnvironment hostingEnvironment)
+        protected readonly AppDbContext _context;
+        protected readonly IWebHostEnvironment _hostingEnvironment;
+        public TransactionController(AppDbContext context, IWebHostEnvironment hostingEnvironment) : base()
         {
             _context = context;
             _hostingEnvironment = hostingEnvironment;
         }
 
         // GET: Admin/Transaction
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? type, DateTime? stDate, DateTime? edDate, bool isUnpaid = false)
         {
-            return View(await _context.Transactions.ToListAsync());
+            if (!type.HasValue) type = 2;
+            var transactions = _context.Transactions.Where(x=>x.Type == type).AsQueryable();
+            if (stDate.HasValue) transactions = transactions.Where(x => x.CreatedAt.Value.Date >= stDate.Value.Date).AsQueryable();
+            if (edDate.HasValue) transactions = transactions.Where(x => x.CreatedAt.Value.Date <= edDate.Value.Date).AsQueryable();
+            if (isUnpaid) transactions = transactions.Where(x => x.Status != TransStatus.PAID).AsQueryable();
+            return View(await transactions.ToListAsync());
         }
 
         [HttpGet]
-        public IActionResult Import()
+        public async Task<IActionResult> Import()
         {
+            var suppliers = await _context.Supplier.OrderBy(x => x.Name).ToListAsync();
+            var items = new List<SelectListItem>();
+            foreach (var supplier in suppliers)
+            {
+                items.Add(new SelectListItem { Text = supplier.EmployeeName + " - " + supplier.Name, Value = supplier.Id.ToString() });
+            }
+            ViewBag.Suppliers = items;
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> ApiImportConfirm(IFormFile csv, IFormFile img)
+        public async Task<IActionResult> ApiImportConfirm(IFormFile csv, IFormFile img, int supplier)
         {
-            if (csv == null || img == null) return NoContent();
+            if (csv == null || img == null)
+            {
+                ModelState.AddModelError("", String.Format(ErrMess.Required, "File csv hoặc ảnh hoá đơn"));
+                return Bad(ModelState);
+            }
+
             string path = Path.Combine(_hostingEnvironment.WebRootPath, "image\\transaction\\temp");
             System.IO.DirectoryInfo di = new DirectoryInfo(path);
-            foreach (FileInfo file in di.GetFiles())
+            try
             {
-                file.Delete();
+                foreach (FileInfo file in di.GetFiles())
+                {
+                    file.Delete();
+                }
+            }
+            catch (Exception)
+            {
             }
 
             string fileCsvName = Path.GetFileName(csv.FileName);
@@ -69,6 +93,8 @@ namespace SaleManager.Areas.Admin.Controllers
             var reader = new CsvReader(sreamreader, CultureInfo.InvariantCulture);
             var datas = reader.GetRecords<ImportProduct>().ToList();
             reader.Dispose();
+            sreamreader.Dispose();
+
             var errors = new List<KeyValue>();
             var validationResults = new List<ValidationResult>();
             foreach (var data in datas)
@@ -79,17 +105,29 @@ namespace SaleManager.Areas.Admin.Controllers
                 {
                     foreach (var err in validationResults)
                     {
-                        errors.Add(new KeyValue(data.Barcode, err.ErrorMessage, data.Name));
+                        ModelState.AddModelError("", err.ErrorMessage);
                     }
                 }
             }
-            if (errors.Count > 0) return BadRequest(errors);
+            if (errors.Count > 0) return Bad(ModelState);
 
-            return Json(new { data = datas, imgPath = fileImgPath.Replace(_hostingEnvironment.WebRootPath, "") });
+            var supplierData = _context.Supplier.Find(supplier);
+            if (supplierData == null)
+            {
+                ModelState.AddModelError("", ErrMess.NotExits);
+                return Bad(ModelState);
+            }
+
+            return Json(new
+            {
+                data = datas,
+                imgPath = fileImgPath.Replace(_hostingEnvironment.WebRootPath, ""),
+                supplierName = supplierData.EmployeeName + "-" + supplierData.Name
+            });
         }
 
         [HttpPost]
-        public async Task<IActionResult> ApiImport(IFormFile csv, IFormFile img)
+        public async Task<IActionResult> ApiImport(IFormFile csv, IFormFile img, int supplier)
         {
             string path = Path.Combine(_hostingEnvironment.WebRootPath, "image\\transaction\\" + DateTime.Now.ToString("yyyy-MM-dd"));
             bool exists = System.IO.Directory.Exists(path);
@@ -114,6 +152,7 @@ namespace SaleManager.Areas.Admin.Controllers
             var reader = new CsvReader(sreamreader, CultureInfo.InvariantCulture);
             var importDatas = reader.GetRecords<ImportProduct>().ToList();
             reader.Dispose();
+            sreamreader.Dispose();
 
             //Refactor and save data
             var barcodes = importDatas.Select(x => x.Barcode).ToList();
@@ -122,10 +161,10 @@ namespace SaleManager.Areas.Admin.Controllers
             var total = 0;
             foreach (var product in products)
             {
-                var import = importDatas.Where(x=>x.Barcode.Equals(product.Barcode)).FirstOrDefault();
+                var import = importDatas.Where(x => x.Barcode.Equals(product.Barcode)).FirstOrDefault();
                 product.Quantity += import.Quantity;
                 product.PriceBuy = import.PriceBuy;
-                product.Price = (import.Price>0 && import.Price != product.Price) ? import.Price : product.Price;
+                product.Price = (import.Price.HasValue && import.Price.Value > 0 && import.Price.Value != product.Price) ? import.Price.Value : product.Price;
                 total += import.Quantity * import.PriceBuy;
             }
 
@@ -134,10 +173,11 @@ namespace SaleManager.Areas.Admin.Controllers
             try
             {
                 _context.Products.UpdateRange(products);
+                var max = _context.Transactions.Max(x => (int?)x.Id);
                 var transaction = new Transaction()
                 {
                     Ammount = total,
-                    BillNumber = _context.Transactions.Max(x => x.Id).ToString("000000000"),
+                    BillNumber = (max == null ? 1 : max.Value).ToString("000000000"),
                     CreatedAt = System.DateTime.Now,
                     CreatedBy = "Administrator",
                     Note = String.Empty,
@@ -147,6 +187,7 @@ namespace SaleManager.Areas.Admin.Controllers
                     Status = TransStatus.UNPAID,
                     //1: nhập hàng, 2: bán hàng
                     Type = TransType.IMPORT,
+                    SupplierId = supplier
                 };
                 _context.Transactions.Add(transaction);
                 _context.SaveChanges();
@@ -159,7 +200,7 @@ namespace SaleManager.Areas.Admin.Controllers
                         CreatedAt = System.DateTime.Now,
                         CreatedBy = "Administrator",
                         ProductId = x.Id,
-                        Quantity = x.Quantity,
+                        Quantity = importDatas.Where(i => i.Barcode.Equals(x.Barcode)).First().Quantity,
                         TransactionId = transaction.Id,
                     });
                 });
@@ -171,8 +212,8 @@ namespace SaleManager.Areas.Admin.Controllers
             catch (Exception)
             {
                 tran.Rollback();
-                return BadRequest();
-                throw;
+                ModelState.AddModelError("", ErrMess.Annonymus);
+                return Bad(ModelState);
             }
 
             return Ok();

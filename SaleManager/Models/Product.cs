@@ -74,7 +74,7 @@ namespace SaleManager.Models
         {
             Barcode = import.Barcode;
             Quantity = import.Quantity;
-            Price = import.Price;
+            Price = import.Price ?? 0;
             PriceBuy = import.PriceBuy;
             Name = import.Name;
             CategoryId = 1;

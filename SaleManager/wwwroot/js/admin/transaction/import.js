@@ -23,6 +23,7 @@
         var formData = new FormData();
         formData.append('csv', $("input.file").get(0).files[0]);
         formData.append('img', $("input.file").get(1).files[0]);
+        formData.append('supplier', $('select.suppilier').val());
 
         $.ajax({
             url: '/admin/transaction/apiImportConfirm',
@@ -33,12 +34,13 @@
             success: function (result) {
                 CreateTable(result);
                 SetImage(result);
+                $('p.supplier').text(result.supplierName);
                 $('div.main-input').removeClass('show').addClass('hidden');
                 $('div.main-confirm').removeClass('hidden').addClass('show fadeIn');
                 $('button.btn-register').addClass('zoomer');
             },
             error: function (error) {
-                alert(error, 'danger');
+                alert(JSON.parse(error.responseText), 'danger');
             }
         });
     });
@@ -48,6 +50,7 @@
         var formData = new FormData();
         formData.append('csv', $("input.file").get(0).files[0]);
         formData.append('img', $("input.file").get(1).files[0]);
+        formData.append('supplier', $('select.suppilier').val());
 
         $.ajax({
             url: '/admin/transaction/apiImport',

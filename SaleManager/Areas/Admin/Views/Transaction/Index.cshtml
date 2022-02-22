@@ -1,28 +1,47 @@
 ﻿@model IEnumerable<SaleManager.Models.Transaction>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Quản lý nhập xuất";
 }
 
-<h1>Index</h1>
+<form action="/Admin/Transaction/Index" method="get">
+    <div class="card mb-5">
+        <div class="card-body">
+            <div class="d-flex flex-wrap">
+                <select class="form-select type-size" name="type">
+                    <option value="2">Bán hàng</option>
+                    <option value="1">Nhập hàng</option>
+                </select>
+                <span class="mx-2"></span>
+                <div class="d-flex flex-row flex-wrap">
+                    <div class="">
+                        <input type="date" class="form-control st-date" placeholder="Start date" aria-label="Start date" name="stDate">
+                    </div>
+                    <span class="mx-2">~</span>
+                    <div class="">
+                        <input type="date" class="form-control ed-date" placeholder="End date" aria-label="End date" name="edDate">
+                    </div>
+                </div>
+                <span class="mx-2"></span>
+                <div class="form-check my-auto">
+                    <input class="form-check-input " type="checkbox" value="" name="isUnpaid" id="flexCheckDefault">
+                    <label class="form-check-label" for="flexCheckDefault">Nợ</label>
+                </div>
+                <span class="mx-2"></span>
+                <button type="submit" class="btn btn-secondary btn-search">Search</button>
+            </div>
+        </div>
+    </div>
+</form>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
+<table class="table table-striped" id="myDataTable">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Type)
-            </th>
             <th>
                 @Html.DisplayNameFor(model => model.CustomerId)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.SupplierId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Ammount)
@@ -34,74 +53,51 @@
                 @Html.DisplayNameFor(model => model.PayBack)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.BillNumber)
-            </th>
-            <th>
                 @Html.DisplayNameFor(model => model.Note)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.CreatedBy)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.UpdatedBy)
-            </th>
-            <th>
                 @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.UpdatedAt)
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Type)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CustomerId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.SupplierId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Status)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Ammount)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Payment)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PayBack)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.BillNumber)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Note)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedBy)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.UpdatedBy)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedAt)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.UpdatedAt)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CustomerId)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.SupplierId)
+                </td>
+                <td>
+                    <span class="currency">
+                        @Html.DisplayFor(modelItem => item.Ammount)
+                    </span>
+                </td>
+                <td>
+                    <span class="currency">
+                        @Html.DisplayFor(modelItem => item.Payment)
+                    </span>
+                </td>
+                <td>
+                    <span class="currency">
+                        @Html.DisplayFor(modelItem => item.PayBack)
+                    </span>
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Note)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CreatedAt)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>

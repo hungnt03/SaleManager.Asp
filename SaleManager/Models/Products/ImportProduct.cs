@@ -17,12 +17,11 @@ namespace SaleManager.Models.Products
         [Range(0, 100000)]
         public int Quantity { set; get; }
 
-        [Display(Name = "Giá bán")]
-        [Required(ErrorMessage = "Giá bán không đựơc để trống")]
-        public int PriceBuy { set; get; }
-
         [Display(Name = "Giá nhập")]
         [Required(ErrorMessage = "Giá nhập không đựơc để trống")]
-        public int Price { set; get; }
+        public int PriceBuy { set; get; }
+
+        [Display(Name = "Giá bán")]
+        public int? Price { set; get; }
     }
 }
